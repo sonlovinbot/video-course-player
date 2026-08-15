@@ -9,6 +9,21 @@ và đóng gói được thành **phần mềm chạy local** (Windows / macOS /
 
 ---
 
+## 🔗 Link nhanh
+
+| Nội dung | Link |
+|----------|------|
+| 🏠 **Trang chủ** (GitHub Pages) | https://sonlovinbot.github.io/video-course-player/ |
+| 📘 **Hướng dẫn dùng Claude Code làm video** (xem online) | https://sonlovinbot.github.io/video-course-player/Huong-dan-Claude-Code-dung-video.html |
+| 📘 Hướng dẫn (bản Artifact trên claude.ai) | https://claude.ai/code/artifact/542d9129-9786-44b8-9f3c-defd6cc1acc0 |
+| 💻 **Mã nguồn** (repo) | https://github.com/sonlovinbot/video-course-player |
+| 📥 Hướng dẫn cài & dùng phần mềm (PDF) | [`HUONG-DAN-SU-DUNG.pdf`](HUONG-DAN-SU-DUNG.pdf) |
+| 📄 Hướng dẫn làm video (PDF để in) | [`Huong-dan-Claude-Code-dung-video.pdf`](Huong-dan-Claude-Code-dung-video.pdf) |
+
+> Trang **player** (`app/index.html`) chạy trên máy (cần video + `course-data.js` riêng), nên không xem đầy đủ online từ repo — xem cách chạy ở mục dưới.
+
+---
+
 ## 📁 Có gì trong repo
 
 | Đường dẫn | Là gì |
