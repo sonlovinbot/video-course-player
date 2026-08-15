@@ -1,0 +1,33 @@
+# ==========================================================================
+#  BAN QUYEN — khong commit noi dung khoa hoc goc ((c) PronunciationWorkshop.com)
+# ==========================================================================
+MP4/
+*.wmv
+*.mp4
+Gxc.PW_Training_Manual.pdf
+transcripts/
+transcripts_fix/
+
+# ban chep loi + dich cua noi dung goc
+app/course-data.js
+
+# anh trang tu tai lieu PDF goc
+app/pdf-pages/
+
+# ==========================================================================
+#  Tao lai duoc — khong can commit
+# ==========================================================================
+packaging/build/
+packaging/dist/
+packaging/UPLOAD/
+packaging/src/go.sum
+packaging/src/go.mod
+
+# ==========================================================================
+#  May / rac / bi mat
+# ==========================================================================
+.DS_Store
+**/.DS_Store
+.claude/settings.local.json
+scratchpad/
+node_modules/

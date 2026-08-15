@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Pronunciation Workshop — Học phát âm tiếng Anh</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0f1422" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Pronunciation" />
+  <link rel="apple-touch-icon" href="icons/apple-180.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+  <style>
+  :root{--bg:#0f1422;--bg-2:#161d2e;--panel:#1b2336;--panel-2:#222c44;--line:#2c3550;
+    --text:#e8ecf6;--muted:#93a0bd;--accent:#4f8cff;--accent-2:#6fe3c4;--active:#2a3a63;
+    --purple:#6a78ff;--radius:14px;--shadow:0 8px 30px rgba(0,0,0,.35)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);
+    color:var(--text);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;gap:16px;
+    background:linear-gradient(180deg,var(--bg-2),var(--bg));border-bottom:1px solid var(--line);flex-shrink:0}
+  .brand{display:flex;align-items:center;gap:14px;min-width:0}
+  .logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-weight:700;
+    font-size:16px;color:#06121f;background:linear-gradient(135deg,var(--accent),var(--accent-2));flex-shrink:0}
+  .topbar h1{font-size:17px;font-weight:700}
+  .topbar p{font-size:12px;color:var(--muted);margin-top:2px}
+  .topbar-right{display:flex;align-items:center;gap:12px}
+  .lang-switch{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .lang-switch button{background:none;border:none;color:var(--muted);font-family:inherit;font-size:12px;font-weight:600;padding:7px 14px;cursor:pointer;transition:all .15s}
+  .lang-switch button.active{background:var(--accent);color:#06121f}
+  .progress-pill{font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:7px 14px;border-radius:999px;white-space:nowrap}
+  .layout{flex:1;display:grid;grid-template-columns:300px 1fr 390px;min-height:0}
+  .sidebar{background:var(--bg-2);border-right:1px solid var(--line);overflow-y:auto;padding:18px 14px}
+  .sidebar-title{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:14px;padding-left:6px}
+  .session{margin-bottom:8px;border-radius:12px;overflow:hidden;background:var(--panel);border:1px solid var(--line)}
+  .session-head{padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;transition:background .15s}
+  .session-head:hover{background:var(--panel-2)}
+  .session-head .caret{color:var(--muted);transition:transform .2s;font-size:12px}
+  .session.open .session-head .caret{transform:rotate(90deg)}
+  .session-num{width:26px;height:26px;flex-shrink:0;border-radius:8px;background:var(--active);color:var(--accent-2);display:grid;place-items:center;font-size:12px;font-weight:700}
+  .chapters{display:none;padding:4px 8px 8px}
+  .session.open .chapters{display:block}
+  .chapter{padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--muted);line-height:1.35;display:flex;justify-content:space-between;gap:8px;align-items:baseline;transition:background .12s,color .12s}
+  .chapter:hover{background:var(--panel-2);color:var(--text)}
+  .chapter.active{background:var(--active);color:#fff;font-weight:600}
+  .chapter .time{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;flex-shrink:0}
+  .chapter.active .time{color:var(--accent-2)}
+  .player-pane{background:var(--bg);padding:22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+  .video-wrap{background:#000;border-radius:var(--radius);box-shadow:var(--shadow);display:flex;justify-content:center;align-items:center}
+  #player{display:block;width:100%;height:auto;max-height:54vh;background:#000;object-fit:contain;border-radius:var(--radius)}
+  .caption-bar{min-height:46px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:10px}
+  .cc-btn{flex-shrink:0;font-size:12px;font-weight:700;border:1px solid var(--line);background:var(--bg-2);color:var(--muted);border-radius:6px;padding:6px 10px;cursor:pointer}
+  .cc-btn.active{background:var(--accent);color:#06121f;border-color:var(--accent)}
+  .cc-sync{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+  .cc-sync button{width:24px;height:24px;border:1px solid var(--line);background:var(--bg-2);color:var(--text);border-radius:6px;cursor:pointer;font-size:13px}
+  .cc-sync button:hover{border-color:var(--accent)}
+  #cc-lead-val{min-width:38px;text-align:center;color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+  .caption-text{flex:1;font-size:14px;color:#dfe6f5;line-height:1.4}
+  .caption-text.empty{color:var(--muted);font-style:italic}
+  .now-playing .np-session{font-size:12px;color:var(--accent-2);font-weight:600;text-transform:uppercase;letter-spacing:.8px}
+  .now-playing h2{font-size:22px;font-weight:700;margin-top:4px}
+  .chapter-controls{display:flex;gap:10px;flex-wrap:wrap}
+  .ctrl-btn{background:var(--panel);color:var(--text);border:1px solid var(--line);padding:10px 16px;border-radius:10px;cursor:pointer;font-size:13px;font-family:inherit;font-weight:500;transition:all .15s}
+  .ctrl-btn:hover{background:var(--panel-2);border-color:var(--accent)}
+  .ctrl-btn:disabled{opacity:.4;cursor:not-allowed}
+  #replay-btn{background:var(--active);border-color:var(--accent)}
+  .right-pane{background:var(--bg-2);border-left:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column}
+  .tabs{display:flex;border-bottom:1px solid var(--line);flex-shrink:0}
+  .tab{flex:1;background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;padding:14px 6px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab-body{flex:1;overflow-y:auto}
+  .lesson-head{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 6px}
+  .lesson-tag{font-size:12px;font-weight:600;color:var(--accent)}
+  .lesson-page{font-size:11px;color:var(--muted)}
+  .ebook-link{margin:8px 20px 0;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--accent-2);background:rgba(111,227,196,.1);border:1px solid rgba(111,227,196,.3);border-radius:8px;padding:8px 12px;cursor:pointer;transition:all .15s}
+  .ebook-link:hover{background:rgba(111,227,196,.2)}
+  .lesson-content{padding:10px 20px 30px;font-size:14px;line-height:1.6}
+  .lesson-content .empty{color:var(--muted);font-style:italic}
+  .lesson-content h4{font-size:16px;margin-bottom:10px;color:var(--accent-2);padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .lesson-content p{margin-bottom:12px;color:#d4dcef}
+  .lesson-content ul{margin:0 0 14px 18px}
+  .lesson-content li{margin-bottom:5px}
+  .lesson-content b{color:#fff}
+  .lesson-content i{color:var(--accent-2);font-style:normal;font-weight:600}
+  .words-label{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:14px 0 8px!important}
+  .word-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+  .word-grid span{background:var(--panel);border:1px solid var(--line);padding:7px 6px;border-radius:8px;text-align:center;font-size:13px;font-weight:500}
+  .tip{background:rgba(79,140,255,.1);border-left:3px solid var(--accent);padding:10px 12px;border-radius:8px}
+  /* transcript */
+  .tr-head{position:sticky;top:0;background:var(--bg-2);padding:12px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:1}
+  .tr-head .lbl{font-size:12px;font-weight:600;color:var(--accent)}
+  .tr-list{padding:8px 12px 40px}
+  .tr-line{padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;line-height:1.45;color:var(--muted);display:flex;gap:10px;transition:background .12s,color .12s}
+  .tr-line:hover{background:var(--panel-2);color:var(--text)}
+  .tr-line.active{background:var(--active);color:#fff}
+  .tr-line .tt{font-size:11px;color:var(--accent-2);font-variant-numeric:tabular-nums;flex-shrink:0;width:38px}
+  /* pdf */
+  .pdf-hint{font-size:12px;color:var(--muted);padding:12px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg-2);z-index:1}
+  .pdf-list{padding:14px 16px 40px;display:flex;flex-direction:column;gap:16px}
+  .pdf-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);transition:all .15s;position:relative}
+  .pdf-card.flash{border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(111,227,196,.3)}
+  .pdf-card img{display:block;width:100%;height:auto;cursor:zoom-in}
+  .pdf-cap{padding:9px 12px;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .pdf-cap .jump{color:var(--accent-2);font-weight:600;white-space:nowrap;cursor:pointer;border:1px solid rgba(111,227,196,.3);border-radius:6px;padding:4px 8px}
+  .pdf-cap .jump:hover{background:rgba(111,227,196,.15)}
+  .pdf-cap .topics{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* zoom modal */
+  .modal{position:fixed;inset:0;background:rgba(5,8,16,.9);display:none;z-index:50;flex-direction:column}
+  .modal.open{display:flex}
+  .modal-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;gap:12px;background:var(--bg-2);border-bottom:1px solid var(--line)}
+  .modal-bar .z-ctrls{display:flex;gap:8px;align-items:center}
+  .modal-bar button{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;width:38px;height:38px;font-size:18px;cursor:pointer;display:grid;place-items:center}
+  .modal-bar button:hover{border-color:var(--accent)}
+  .modal-bar .zlabel{font-size:13px;color:var(--muted);min-width:48px;text-align:center}
+  .modal-scroll{flex:1;overflow:auto;display:grid;place-items:center;padding:20px;cursor:grab}
+  .modal-scroll.grabbing{cursor:grabbing}
+  .modal-scroll img{transform-origin:center top;transition:transform .08s;box-shadow:0 10px 40px rgba(0,0,0,.6);background:#fff}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+  /* ===== MOBILE ===== */
+  @media(max-width:1200px){.layout{grid-template-columns:260px 1fr}.right-pane{display:none}}
+  @media(max-width:900px){
+    body{height:auto;min-height:100vh;overflow:auto}
+    .topbar{flex-wrap:wrap;gap:10px;padding:10px 14px}
+    .topbar h1{font-size:15px}
+    .layout{display:flex;flex-direction:column;height:auto}
+    .sidebar,.right-pane{display:flex;width:100%;border:none;border-top:1px solid var(--line);max-height:none;overflow:visible}
+    .sidebar{order:3}
+    .player-pane{order:1;overflow:visible;padding:14px}
+    .right-pane{order:2}
+    .tab-body{overflow:visible}
+    #player{max-height:42vh}
+  }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">PW</span>
+      <div><h1 id="course-title">Pronunciation Workshop</h1><p id="course-sub"></p></div>
+    </div>
+    <div class="topbar-right">
+      <div class="lang-switch" id="lang-switch"><button data-lang="en">EN</button><button data-lang="vi">VI</button></div>
+      <div class="progress-pill" id="progress-pill">—</div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar" id="sidebar" style="flex-direction:column">
+      <h2 class="sidebar-title" id="sidebar-title">Nội dung khóa học</h2>
+      <nav id="session-list" style="flex:1"></nav>
+    </aside>
+
+    <section class="player-pane">
+      <div class="video-wrap"><video id="player" controls playsinline></video></div>
+      <div class="caption-bar">
+        <button class="cc-btn" id="cc-btn">CC</button>
+        <div class="caption-text empty" id="caption-text"></div>
+        <span class="cc-sync" id="cc-sync"><span id="cc-sync-name">Khớp</span>
+          <button id="cc-lead-down">−</button><span id="cc-lead-val">0.5s</span><button id="cc-lead-up">+</button>
+        </span>
+      </div>
+      <div class="now-playing"><span class="np-session" id="np-session"></span><h2 id="np-chapter"></h2></div>
+      <div class="chapter-controls">
+        <button id="prev-btn" class="ctrl-btn"></button>
+        <button id="replay-btn" class="ctrl-btn"></button>
+        <button id="next-btn" class="ctrl-btn"></button>
+      </div>
+    </section>
+
+    <aside class="right-pane" style="flex-direction:column">
+      <div class="tabs">
+        <button class="tab active" data-tab="lesson" id="tab-lesson"></button>
+        <button class="tab" data-tab="transcript" id="tab-transcript"></button>
+        <button class="tab" data-tab="pdf" id="tab-pdf"></button>
+      </div>
+      <div class="tab-body" id="tab-lesson-body">
+        <div class="lesson-head"><span class="lesson-tag" id="lesson-tag"></span><span class="lesson-page" id="lesson-page"></span></div>
+        <div id="ebook-link" class="ebook-link" style="display:none"></div>
+        <div id="lesson-content" class="lesson-content"></div>
+      </div>
+      <div class="tab-body" id="tab-transcript-body" style="display:none">
+        <div class="tr-head"><span class="lbl" id="tr-lbl"></span></div>
+        <div class="tr-list" id="tr-list"></div>
+      </div>
+      <div class="tab-body" id="tab-pdf-body" style="display:none">
+        <div class="pdf-hint" id="pdf-hint"></div>
+        <div class="pdf-list" id="pdf-list"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- PDF zoom modal -->
+  <div class="modal" id="modal">
+    <div class="modal-bar">
+      <div class="z-ctrls"><button id="z-out">−</button><span class="zlabel" id="z-label">100%</span><button id="z-in">+</button><button id="z-reset" style="font-size:13px">⟲</button></div>
+      <button id="modal-close">✕</button>
+    </div>
+    <div class="modal-scroll" id="modal-scroll"><img id="modal-img" src="" alt="PDF"/></div>
+  </div>
+
+
+  <script src="course-data.js"></script>
+  <script>
+
+  const UI={
+    en:{courseContent:"Course Content",lesson:"Lesson",transcript:"Transcript",pdf:"Original PDF",
+      lessonTag:"Lesson (from PDF manual)",selectTopic:"Select a topic to begin",
+      prev:"‹ Prev",replay:"↻ Replay topic",next:"Next ›",
+      topic:(i,n)=>`Topic ${i} / ${n}`,count:n=>`${n} topics`,
+      pdfHint:"Tap a page image to zoom · tap \"Jump\" to go to the related video.",jump:"▶ Jump",page:"Page",
+      ebook:"📖 View related PDF page →",
+      shadow:"🗣️ Shadowing practice",shadowHint:"Listen to the teacher and read along, word by word.",
+      shHeading:"Shadowing Mode",record:"Record",stop:"Stop",loop:"Loop",noRec:"Recording needs Chrome/Safari over localhost or https."},
+    vi:{courseContent:"Nội dung khóa học",lesson:"Bài học",transcript:"Phụ đề",pdf:"PDF gốc",
+      lessonTag:"Bài học (từ tài liệu PDF)",selectTopic:"Chọn một chủ đề để bắt đầu",
+      prev:"‹ Trước",replay:"↻ Xem lại chủ đề",next:"Tiếp ›",
+      topic:(i,n)=>`Chủ đề ${i} / ${n}`,count:n=>`${n} chủ đề`,
+      pdfHint:"Chạm ảnh trang để phóng to · chạm \"Tới video\" để nhảy tới đoạn liên quan.",jump:"▶ Tới video",page:"Trang",
+      ebook:"📖 Xem trang PDF liên quan →",
+      shadow:"🗣️ Tập đọc theo thầy (Shadowing)",shadowHint:"Nghe thầy đọc và đọc nhẩm theo, từng từ một.",
+      shHeading:"Tập đọc — Shadowing",record:"Thu âm",stop:"Dừng",loop:"Lặp",noRec:"Thu âm cần Chrome/Safari trên localhost hoặc https."}
+  };
+
+  (function(){
+    const C=window.COURSE, $=id=>document.getElementById(id);
+    let lang=localStorage.getItem('pw_lang')||'vi';
+    let cc=(localStorage.getItem('pw_cc')||'on')==='on';   // caption on/off (uses global lang)
+    let SUB_LEAD=parseFloat(localStorage.getItem('pw_sublead')); if(isNaN(SUB_LEAD))SUB_LEAD=0.5; // caption leads audio (sec)
+    const video=$('player'); let hls=null, current={session:null,chapterIdx:-1};
+    const flat=[]; C.sessions.forEach((s,si)=>s.chapters.forEach((ch,ci)=>flat.push({si,ci})));
+    $('course-title').textContent=C.title; $('course-sub').textContent=C.subtitle;
+    const T=()=>UI[lang];
+    const fmt=t=>{t=Math.max(0,t||0);const m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+String(s).padStart(2,'0');};
+
+    function renderSidebar(){
+      const list=$('session-list'); list.innerHTML='';
+      C.sessions.forEach((s,si)=>{
+        const sEl=document.createElement('div'); sEl.className='session'; sEl.dataset.si=si;
+        const h=document.createElement('div'); h.className='session-head';
+        h.innerHTML=`<span class="caret">▶</span><span class="session-num">${s.id}</span><span>${s.title[lang]}</span>`;
+        h.onclick=()=>sEl.classList.toggle('open'); sEl.appendChild(h);
+        const w=document.createElement('div'); w.className='chapters';
+        s.chapters.forEach((ch,ci)=>{
+          const c=document.createElement('div'); c.className='chapter'; c.dataset.si=si; c.dataset.ci=ci;
+          c.innerHTML=`<span>${ch.title[lang]}</span><span class="time">${fmt(ch.start)}</span>`;
+          c.onclick=()=>playChapter(si,ci); w.appendChild(c);
+        });
+        sEl.appendChild(w); list.appendChild(sEl);
+      });
+      const si=current.session?C.sessions.indexOf(current.session):0;
+      document.querySelector(`.session[data-si="${si}"]`)?.classList.add('open'); highlight();
+    }
+
+    function loadVideo(s){
+      const useLocal=C.useLocal||!s.video.src, url=useLocal?s.video.srcLocal:s.video.src;
+      if(hls){hls.destroy();hls=null;}
+      if(!useLocal&&s.video.type==='hls'){
+        if(video.canPlayType('application/vnd.apple.mpegurl'))video.src=url;
+        else if(window.Hls&&Hls.isSupported()){hls=new Hls();hls.loadSource(url);hls.attachMedia(video);}
+        else video.src=url;
+      } else video.src=url;
+    }
+    function playChapter(si,ci){
+      const s=C.sessions[si], ch=s.chapters[ci];
+      if(!current.session||current.session.id!==s.id){loadVideo(s); renderTranscript();}
+      current={session:s,chapterIdx:ci};
+      const seek=()=>{try{video.currentTime=ch.start;}catch(e){}video.play().catch(()=>{});};
+      if(video.readyState>=1)seek(); else video.addEventListener('loadedmetadata',seek,{once:true});
+      renderNow(); renderLesson(); renderPdf();
+      document.querySelector(`.session[data-si="${si}"]`)?.classList.add('open');
+      highlight(); updateNav();
+    }
+    function renderNow(){
+      const s=current.session, ch=s?s.chapters[current.chapterIdx]:null;
+      $('np-session').textContent=s?s.title[lang]:'';
+      $('np-chapter').textContent=ch?ch.title[lang]:T().selectTopic;
+    }
+    function renderLesson(){
+      const s=current.session, ch=s?s.chapters[current.chapterIdx]:null;
+      $('lesson-tag').textContent=T().lessonTag;
+      $('lesson-page').textContent=s&&s.pdfPages?`PDF ${T().page} ${s.pdfPages}`:'';
+      $('lesson-content').innerHTML=ch?ch.lesson[lang]:`<p class="empty">${T().selectTopic}</p>`;
+      const el=$('ebook-link');
+      if(ch&&s.pdf&&s.pdf[ch.pdfIdx]!=null){el.style.display='inline-flex';el.textContent=T().ebook;el.onclick=()=>openEbook(ch.pdfIdx);}
+      else el.style.display='none';
+      $('tab-lesson-body').scrollTop=0;
+    }
+
+    /* transcript */
+    function renderTranscript(){
+      const s=current.session||C.sessions[0];
+      $('tr-lbl').textContent=T().transcript;
+      const list=$('tr-list'); list.innerHTML='';
+      (s.transcript||[]).forEach((seg,i)=>{
+        const d=document.createElement('div'); d.className='tr-line'; d.dataset.i=i;
+        d.innerHTML=`<span class="tt">${fmt(seg.t)}</span><span class="tx">${seg[lang]}</span>`;
+        d.onclick=()=>{video.currentTime=seg.t+0.05;video.play().catch(()=>{});};
+        list.appendChild(d);
+      });
+    }
+    function curSegIdx(t){
+      const s=current.session; if(!s||!s.transcript)return -1;
+      let idx=-1; for(let i=0;i<s.transcript.length;i++){if(s.transcript[i].t<=t)idx=i;else break;} return idx;
+    }
+    function syncTranscript(t){
+      const idx=curSegIdx(t+SUB_LEAD);   // caption leads audio by SUB_LEAD to offset whisper lag
+      document.querySelectorAll('.tr-line').forEach(el=>el.classList.toggle('active',+el.dataset.i===idx));
+      const box=$('caption-text');
+      if(cc){
+        const s=current.session, seg=s&&s.transcript&&idx>=0?s.transcript[idx]:null;
+        if(seg){box.classList.remove('empty');box.textContent=seg[lang];}else{box.classList.add('empty');box.textContent='…';}
+      } else { box.classList.add('empty'); box.textContent=''; }
+      if(idx>=0&&$('tab-transcript-body').style.display!=='none'){
+        document.querySelector(`.tr-line[data-i="${idx}"]`)?.scrollIntoView({block:'nearest'});
+      }
+    }
+
+    /* pdf */
+    function renderPdf(){
+      const s=current.session||C.sessions[0];
+      $('pdf-hint').textContent=T().pdfHint;
+      const list=$('pdf-list'); list.innerHTML='';
+      (s.pdf||[]).forEach((pg,idx)=>{
+        const card=document.createElement('div'); card.className='pdf-card'; card.dataset.idx=idx;
+        card.innerHTML=`<img src="${pg.img}" alt="PDF page"/><div class="pdf-cap"><span class="topics">${pg.topics[lang]}</span><span class="jump">${T().jump}</span></div>`;
+        card.querySelector('img').onclick=()=>openModal(pg.img);
+        card.querySelector('.jump').onclick=()=>{const ci=s.chapters.findIndex(c=>c.id===pg.chapter);if(ci>=0){switchTab('lesson');playChapter(C.sessions.indexOf(s),ci);}};
+        list.appendChild(card);
+      });
+    }
+    function openEbook(pdfIdx){
+      switchTab('pdf');
+      const card=document.querySelector(`.pdf-card[data-idx="${pdfIdx}"]`);
+      if(card){card.scrollIntoView({block:'start',behavior:'smooth'});card.classList.add('flash');setTimeout(()=>card.classList.remove('flash'),1500);}
+    }
+
+    /* zoom modal */
+    let zoom=1; const mImg=$('modal-img'), mScroll=$('modal-scroll');
+    function openModal(src){zoom=1;mImg.src=src;applyZoom();$('modal').classList.add('open');}
+    function closeModal(){$('modal').classList.remove('open');}
+    function applyZoom(){mImg.style.transform=`scale(${zoom})`;$('z-label').textContent=Math.round(zoom*100)+'%';}
+    $('z-in').onclick=()=>{zoom=Math.min(zoom+0.25,4);applyZoom();};
+    $('z-out').onclick=()=>{zoom=Math.max(zoom-0.25,0.5);applyZoom();};
+    $('z-reset').onclick=()=>{zoom=1;applyZoom();};
+    $('modal-close').onclick=closeModal;
+    $('modal').onclick=e=>{if(e.target.id==='modal')closeModal();};
+    let dragging=false,sx,sy,sl,st;
+    mScroll.addEventListener('mousedown',e=>{dragging=true;mScroll.classList.add('grabbing');sx=e.clientX;sy=e.clientY;sl=mScroll.scrollLeft;st=mScroll.scrollTop;});
+    window.addEventListener('mouseup',()=>{dragging=false;mScroll.classList.remove('grabbing');});
+    window.addEventListener('mousemove',e=>{if(dragging){mScroll.scrollLeft=sl-(e.clientX-sx);mScroll.scrollTop=st-(e.clientY-sy);}});
+
+    /* (dormant) audio recorder — kept in code for a future feature, not shown in UI */
+    async function pwRecordStart(){
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      const mr=new MediaRecorder(stream); mr._chunks=[]; mr._stream=stream;
+      mr.ondataavailable=e=>mr._chunks.push(e.data); mr.start(); return mr;
+    }
+    function pwRecordStop(mr){return new Promise(res=>{mr.onstop=()=>{mr._stream.getTracks().forEach(t=>t.stop());res(URL.createObjectURL(new Blob(mr._chunks,{type:'audio/webm'})));};mr.stop();});}
+    window._pwRecord={start:pwRecordStart,stop:pwRecordStop};
+
+    /* nav/highlight/tabs */
+    function highlight(){
+      const si=current.session?C.sessions.indexOf(current.session):-1, ci=current.chapterIdx;
+      document.querySelectorAll('.chapter').forEach(el=>el.classList.toggle('active',+el.dataset.si===si&&+el.dataset.ci===ci));
+    }
+    const flatIdx=(si,ci)=>flat.findIndex(f=>f.si===si&&f.ci===ci);
+    const curFlat=()=>current.session?flatIdx(C.sessions.indexOf(current.session),current.chapterIdx):-1;
+    function updateNav(){
+      const i=curFlat();
+      $('prev-btn').disabled=i<=0; $('next-btn').disabled=i<0||i>=flat.length-1;
+      $('progress-pill').textContent=i<0?T().count(flat.length):T().topic(i+1,flat.length);
+    }
+    function switchTab(name){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+      $('tab-lesson-body').style.display=name==='lesson'?'':'none';
+      $('tab-transcript-body').style.display=name==='transcript'?'':'none';
+      $('tab-pdf-body').style.display=name==='pdf'?'':'none';
+    }
+    document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));
+    $('prev-btn').onclick=()=>{const c=curFlat();if(c>0){const f=flat[c-1];playChapter(f.si,f.ci);}};
+    $('next-btn').onclick=()=>{const c=curFlat();if(c<flat.length-1){const f=flat[c+1];playChapter(f.si,f.ci);}};
+    $('replay-btn').onclick=()=>{if(current.session){video.currentTime=current.session.chapters[current.chapterIdx].start;video.play();}};
+    video.addEventListener('timeupdate',()=>{
+      if(!current.session)return; const t=video.currentTime, chs=current.session.chapters;
+      const a=chs.findIndex(ch=>t>=ch.start&&t<ch.end);
+      if(a!==-1&&a!==current.chapterIdx){current.chapterIdx=a;renderNow();renderLesson();highlight();updateNav();}
+      syncTranscript(t);
+    });
+
+    function applyCC(){
+      $('cc-btn').classList.toggle('active',cc);
+      $('cc-sync').style.display=cc?'inline-flex':'none';
+      $('cc-lead-val').textContent=(SUB_LEAD>0?'+':'')+SUB_LEAD.toFixed(1)+'s';
+      $('cc-sync-name').textContent=(lang==='vi'?'Khớp':'Sync');
+      if(!cc){$('caption-text').classList.add('empty');$('caption-text').textContent='';}
+    }
+    $('cc-btn').onclick=()=>{cc=!cc;localStorage.setItem('pw_cc',cc?'on':'off');applyCC();syncTranscript(video.currentTime||0);};
+    $('cc-lead-down').onclick=()=>{SUB_LEAD=Math.round((SUB_LEAD-0.1)*10)/10;localStorage.setItem('pw_sublead',SUB_LEAD);applyCC();syncTranscript(video.currentTime||0);};
+    $('cc-lead-up').onclick=()=>{SUB_LEAD=Math.round((SUB_LEAD+0.1)*10)/10;localStorage.setItem('pw_sublead',SUB_LEAD);applyCC();syncTranscript(video.currentTime||0);};
+
+    function applyLang(){
+      document.documentElement.lang=lang;
+      document.querySelectorAll('.lang-switch#lang-switch button').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+      $('sidebar-title').textContent=T().courseContent;
+      $('tab-lesson').textContent=T().lesson; $('tab-transcript').textContent=T().transcript; $('tab-pdf').textContent=T().pdf;
+      $('prev-btn').textContent=T().prev; $('replay-btn').textContent=T().replay; $('next-btn').textContent=T().next;
+      renderSidebar(); renderNow(); renderLesson(); renderPdf(); renderTranscript(); updateNav();
+      applyCC(); syncTranscript(video.currentTime||0);
+    }
+    document.querySelectorAll('.lang-switch#lang-switch button').forEach(b=>b.onclick=()=>{lang=b.dataset.lang;localStorage.setItem('pw_lang',lang);applyLang();});
+
+    applyCC(); applyLang();
+  })();
+  </script>
+  <script>
+  /* PWA: register service worker so the app is installable + works offline (videos still stream) */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  }
+  </script>
+</body>
+</html>

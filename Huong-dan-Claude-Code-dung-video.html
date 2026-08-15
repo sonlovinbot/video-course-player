@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dùng Claude Code để cắt & dựng video — Hướng dẫn cho người mới</title>
+<style>
+:root{
+  --bg:#f3f3ee; --surface:#ffffff; --surface-2:#ecece5; --line:#e2e2da;
+  --ink:#191b22; --muted:#5b6070; --faint:#8b8f9e;
+  --accent:#3a54ff; --accent-soft:rgba(58,84,255,.10);
+  --action:#e85c34; --action-soft:rgba(232,92,52,.12);
+  --good:#188f6c; --good-soft:rgba(24,143,108,.12);
+  --term:#14161d; --term-ink:#e8ebf2; --term-line:#2b2f3a; --term-dim:#8b93a6; --term-green:#5fe0a8; --term-blue:#79b0ff;
+  --radius:16px; --shadow:0 1px 2px rgba(20,22,30,.04), 0 12px 32px -12px rgba(20,22,30,.14);
+  --maxw:820px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1118; --surface:#161922; --surface-2:#1d212c; --line:#282d39;
+    --ink:#edeff6; --muted:#9aa0b2; --faint:#6d7386;
+    --accent:#6d86ff; --accent-soft:rgba(109,134,255,.14);
+    --action:#ff7a52; --action-soft:rgba(255,122,82,.15);
+    --good:#3ecaa0; --good-soft:rgba(62,202,160,.15);
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 16px 40px -16px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f3f3ee; --surface:#ffffff; --surface-2:#ecece5; --line:#e2e2da;
+  --ink:#191b22; --muted:#5b6070; --faint:#8b8f9e;
+  --accent:#3a54ff; --accent-soft:rgba(58,84,255,.10);
+  --action:#e85c34; --action-soft:rgba(232,92,52,.12);
+  --good:#188f6c; --good-soft:rgba(24,143,108,.12);
+  --shadow:0 1px 2px rgba(20,22,30,.04), 0 12px 32px -12px rgba(20,22,30,.14);
+}
+:root[data-theme="dark"]{
+  --bg:#0f1118; --surface:#161922; --surface-2:#1d212c; --line:#282d39;
+  --ink:#edeff6; --muted:#9aa0b2; --faint:#6d7386;
+  --accent:#6d86ff; --accent-soft:rgba(109,134,255,.14);
+  --action:#ff7a52; --action-soft:rgba(255,122,82,.15);
+  --good:#3ecaa0; --good-soft:rgba(62,202,160,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 16px 40px -16px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  line-height:1.62; font-size:17px; -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 86%, transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+.brandmark{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:.2px}
+.brandmark .dot{width:11px;height:11px;border-radius:50%;background:var(--action);box-shadow:0 0 0 4px var(--action-soft)}
+.theme-btn{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;
+  padding:7px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;gap:7px;align-items:center}
+.theme-btn:hover{color:var(--ink);border-color:var(--accent)}
+
+/* hero */
+.hero{padding:64px 0 26px}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--action);margin-bottom:18px}
+.hero h1{font-size:clamp(32px,5.4vw,50px);line-height:1.05;letter-spacing:-.02em;font-weight:800;text-wrap:balance;margin-bottom:20px}
+.hero h1 .u{background:linear-gradient(transparent 62%,var(--accent-soft) 62%)}
+.hero .lede{font-size:19.5px;color:var(--muted);max-width:64ch;text-wrap:pretty}
+.hero .meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px}
+.tag{font-size:13px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 13px}
+
+/* sections */
+section{padding:30px 0}
+.kicker{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.kicker .n{flex-shrink:0;width:34px;height:34px;border-radius:10px;background:var(--ink);color:var(--bg);
+  display:grid;place-items:center;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
+.kicker h2{font-size:26px;letter-spacing:-.01em;font-weight:800;line-height:1.2}
+.lead{color:var(--muted);font-size:17.5px;margin-bottom:8px;max-width:66ch}
+p{margin:0 0 14px;max-width:70ch}
+p .hl{color:var(--ink);font-weight:600}
+a{color:var(--accent);text-underline-offset:3px}
+.divider{height:1px;background:var(--line);border:0;margin:6px 0}
+
+/* callout / analogy */
+.note{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);margin:16px 0}
+.note.accent{border-left:3px solid var(--accent)}
+.note.action{border-left:3px solid var(--action)}
+.note .lbl{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.note p:last-child{margin-bottom:0}
+
+/* tool grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:6px}
+.tool{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px}
+.tool h3{font-size:16px;display:flex;align-items:center;gap:9px;margin-bottom:5px}
+.tool h3 .ic{color:var(--accent);flex-shrink:0}
+.tool p{font-size:14.5px;color:var(--muted);margin:0 0 10px}
+.tool .cmd{font-size:12.5px}
+
+/* prompt (what you say to AI) */
+.say{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin:14px 0;overflow:hidden}
+.say-head{display:flex;align-items:center;gap:8px;padding:10px 15px;border-bottom:1px solid var(--line);
+  font-size:12.5px;font-weight:700;color:var(--action);letter-spacing:.03em;background:var(--action-soft)}
+.say-head .av{width:18px;height:18px;border-radius:50%;background:var(--action);flex-shrink:0}
+.say-body{padding:15px 17px;font-size:16.5px;color:var(--ink)}
+.say-body .fill{color:var(--accent);font-weight:600}
+.copy{margin-left:auto;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:8px;
+  padding:4px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.copy:hover{color:var(--ink);border-color:var(--action)}
+.copy.done{color:var(--good);border-color:var(--good)}
+
+/* terminal / command */
+.term{background:var(--term);border-radius:12px;overflow:hidden;margin:14px 0;border:1px solid var(--term-line)}
+.term-head{display:flex;align-items:center;gap:7px;padding:9px 13px;border-bottom:1px solid var(--term-line)}
+.term-head .b{width:11px;height:11px;border-radius:50%;background:#3a3f4c}
+.term-head .t{margin-left:8px;font-size:11.5px;color:var(--term-dim);letter-spacing:.04em}
+.term-head .copy{margin-left:auto;background:transparent;border-color:var(--term-line);color:var(--term-dim)}
+.term pre{padding:14px 16px;overflow-x:auto;font-size:13.5px;line-height:1.7;color:var(--term-ink)}
+.term .p{color:var(--term-green)}
+.term .c{color:var(--term-dim)}
+
+/* numbered steps */
+.steps{counter-reset:step;display:flex;flex-direction:column;gap:16px;margin-top:8px}
+.step{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 22px 20px 66px;box-shadow:var(--shadow)}
+.step::before{counter-increment:step;content:counter(step);position:absolute;left:18px;top:20px;
+  width:34px;height:34px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;
+  font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+.step h3{font-size:18px;margin-bottom:6px;letter-spacing:-.01em}
+.step p{font-size:15.5px;color:var(--muted);margin-bottom:10px}
+.step .did{font-size:13.5px;color:var(--faint);display:flex;gap:8px;align-items:flex-start;margin-top:10px}
+.step .did .arrow{color:var(--good);font-weight:800;flex-shrink:0}
+.step .say,.step .term{margin:10px 0 0}
+
+/* lessons */
+.lessons{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:14px;margin-top:6px}
+.lesson{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px 18px}
+.lesson .tt{font-weight:700;font-size:15.5px;margin-bottom:6px;display:flex;gap:9px;align-items:center}
+.lesson .tt .k{width:8px;height:8px;border-radius:2px;background:var(--action);flex-shrink:0;transform:rotate(45deg)}
+.lesson p{font-size:14.5px;color:var(--muted);margin:0}
+
+/* practice band */
+.practice{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--action);
+  border-radius:var(--radius);padding:6px 24px 24px;box-shadow:var(--shadow);margin-top:6px}
+
+/* glossary */
+.gloss{display:grid;gap:0;margin-top:6px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.gr{display:grid;grid-template-columns:170px 1fr;gap:16px;padding:13px 18px;border-bottom:1px solid var(--line);font-size:15px}
+.gr:last-child{border-bottom:0}
+.gr:nth-child(odd){background:var(--surface)}
+.gr .term-w{font-weight:700}
+.gr .term-w .en{display:block;font-size:12px;color:var(--faint);font-weight:600}
+.gr .def{color:var(--muted)}
+@media(max-width:560px){.gr{grid-template-columns:1fr;gap:3px}}
+
+/* footer */
+footer{border-top:1px solid var(--line);margin-top:30px;padding:26px 0 60px;color:var(--faint);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+/* flow diagram */
+.flow{width:100%;height:auto;margin:10px 0 2px;overflow:visible}
+.flow text{font-family:system-ui,sans-serif}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <div class="brandmark"><span class="dot"></span> Claude Code × Video</div>
+  <button class="theme-btn" id="themeBtn" aria-label="Đổi giao diện sáng/tối">◐ Giao diện</button>
+</div></div>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">Hướng dẫn cho người mới — không cần biết lập trình</div>
+  <h1>Dùng <span class="u">Claude Code</span> để cắt, dựng và biên tập video bằng cách <span class="u">ra lệnh tiếng Việt</span>.</h1>
+  <p class="lede">Bạn không gõ câu lệnh phức tạp. Bạn <b>nói</b> điều muốn làm, AI tự chạy các phần mềm cắt/ghép/chép lời và dựng thành trang xem video. Tài liệu này rút ra từ chính quá trình mình đã làm một khoá học video hoàn chỉnh cùng nhau.</p>
+  <div class="meta">
+    <span class="tag">⏱ Đọc ~12 phút</span>
+    <span class="tag">🎯 Kết quả: 1 dashboard xem video có chương + phụ đề</span>
+    <span class="tag">💻 Mac · Windows · Linux</span>
+  </div>
+</div></header>
+
+<main>
+
+<!-- 1. Claude Code là gì -->
+<section><div class="wrap">
+  <div class="kicker"><span class="n">1</span><h2>Claude Code là gì?</h2></div>
+  <p class="lead">Hãy hình dung một <span class="hl">trợ lý AI ngồi ngay trong máy tính của bạn</span>. Bạn ra lệnh bằng tiếng Việt bình thường, nó tự mở và điều khiển các phần mềm để làm việc: chuyển định dạng video, chép lời, cắt theo chủ đề, dựng trang web xem video, đóng gói thành phần mềm cài đặt...</p>
+  <div class="note accent">
+    <div class="lbl">Điểm khác biệt quan trọng</div>
+    <p>Các công cụ dựng phim thường bắt bạn <b>tự thao tác từng nút</b>. Với Claude Code, bạn <b>mô tả kết quả mong muốn</b> — “cắt video này thành các chương theo chủ đề rồi dựng trang xem” — còn phần chạy lệnh là việc của AI. Bạn duyệt và chỉnh, giống như làm việc với một cộng sự.</p>
+  </div>
+  <p>Claude Code chạy trong <span class="hl">Terminal</span> (cửa sổ dòng lệnh) hoặc trong app. Bạn “mở nó tại một thư mục” — tức là chỉ cho nó biết folder video bạn muốn làm việc — rồi bắt đầu trò chuyện.</p>
+</div></section>
+
+<!-- 2. Cần cài gì -->
+<section><div class="wrap">
+  <div class="kicker"><span class="n">2</span><h2>Cần cài những gì? (môi trường)</h2></div>
+  <p class="lead">Tin vui: bạn <span class="hl">không phải nhớ các lệnh cài đặt</span>. Cứ mở Claude Code rồi nhờ nó cài giúp. Dưới đây là các “nhân viên” mà AI sẽ dùng — để bạn hiểu mỗi cái làm gì.</p>
+
+  <div class="say">
+    <div class="say-head"><span class="av"></span> Bạn nói với AI
+      <button class="copy" data-copy="Máy tôi là macOS. Hãy kiểm tra và cài giúp tôi các công cụ cần cho việc xử lý video: ffmpeg, whisper (chép lời), yt-dlp (tải video YouTube), và Python nếu thiếu. Giải thích ngắn gọn mỗi cái làm gì.">Sao chép</button>
+    </div>
+    <div class="say-body">“Máy tôi là <span class="fill">macOS</span>. Hãy kiểm tra và <b>cài giúp tôi</b> các công cụ cần cho xử lý video: ffmpeg, whisper, yt-dlp, Python nếu thiếu. Giải thích ngắn gọn mỗi cái làm gì.”</div>
+  </div>
+
+  <div class="grid">
+    <div class="tool"><h3><span class="ic">◆</span> Claude Code</h3><p>Chính là AI bạn ra lệnh. Cài một lần từ trang chủ Claude Code.</p></div>
+    <div class="tool"><h3><span class="ic">◆</span> Homebrew <span style="font-weight:500;color:var(--faint);font-size:12px">(Mac)</span></h3><p>“Chợ” cài phần mềm cho Mac. Nhờ AI cài các công cụ dưới đây qua nó.</p></div>
+    <div class="tool"><h3><span class="ic">◆</span> ffmpeg</h3><p>“Dao mổ” video: đổi định dạng (WMV→MP4), cắt, ghép, tách âm thanh.</p></div>
+    <div class="tool"><h3><span class="ic">◆</span> whisper</h3><p>“Máy chép lời”: nghe audio và ghi ra chữ kèm mốc thời gian → làm phụ đề & tìm chỗ cắt.</p></div>
+    <div class="tool"><h3><span class="ic">◆</span> yt-dlp</h3><p>Tải video từ YouTube về máy để làm việc (dùng cho bài thực hành).</p></div>
+    <div class="tool"><h3><span class="ic">◆</span> Python</h3><p>Ngôn ngữ để AI viết các đoạn xử lý nhỏ (đọc PDF, ghép dữ liệu…). Mac thường có sẵn.</p></div>
+    <div class="tool"><h3><span class="ic">◆</span> Trình duyệt</h3><p>Chrome / Safari / Edge để xem dashboard video mà AI dựng ra.</p></div>
+  </div>
+
+  <div class="note">
+    <div class="lbl">Nếu bạn thích tự chạy 1 lệnh (Mac)</div>
+    <div class="term"><div class="term-head"><span class="b"></span><span class="b"></span><span class="b"></span><span class="t mono">Terminal</span>
+      <button class="copy" data-copy="brew install ffmpeg whisper-cpp yt-dlp">Sao chép</button></div>
+      <pre class="mono"><span class="c"># cài 3 công cụ chính cùng lúc</span>
+<span class="p">$</span> brew install ffmpeg whisper-cpp yt-dlp</pre></div>
+    <p style="margin:0;font-size:14.5px;color:var(--muted)">Không nhớ nổi cũng không sao — cứ đưa dòng này cho AI hoặc bảo “cài giúp tôi”.</p>
+  </div>
+</div></section>
+
+<!-- 3. Cách nói chuyện với AI -->
+<section><div class="wrap">
+  <div class="kicker"><span class="n">3</span><h2>Cách “hỏi đáp” và ra lệnh cho AI</h2></div>
+  <p class="lead">Bí quyết không nằm ở câu lệnh, mà ở cách bạn <span class="hl">mô tả rõ ràng</span> và <span class="hl">duyệt từng bước</span>.</p>
+
+  <h3 style="font-size:17px;margin:18px 0 4px">a. Nói tự nhiên, mô tả kết quả</h3>
+  <p>Không cần thuật ngữ. Nói như giao việc cho người thật: <i>bạn có gì → muốn gì → kết quả trông ra sao</i>.</p>
+  <div class="say"><div class="say-head"><span class="av"></span> Bạn nói với AI
+      <button class="copy" data-copy="Trong folder này có 1 video. Hãy chép lời nó ra tiếng Anh, cắt thành các phần theo chủ đề, rồi dựng 1 trang web có trình phát video và danh sách chương bên trái. Chạy cho tôi xem thử.">Sao chép</button></div>
+    <div class="say-body">“Trong folder này có 1 video. Hãy chép lời ra, <b>cắt thành các phần theo chủ đề</b>, rồi dựng 1 trang web có trình phát và danh sách chương bên trái. Chạy cho tôi xem thử.”</div></div>
+
+  <h3 style="font-size:17px;margin:20px 0 4px">b. Duyệt từng bước — câu thần chú</h3>
+  <p>Với việc lớn, đừng để AI làm một mạch. Bảo nó làm một phần rồi dừng để bạn xem. Đây là cách kiểm soát chất lượng.</p>
+  <div class="say"><div class="say-head"><span class="av"></span> Bạn nói với AI
+      <button class="copy" data-copy="Làm mẫu 1 bài trước cho tôi xem, ổn rồi mới làm tiếp toàn bộ.">Sao chép</button></div>
+    <div class="say-body">“<b>Làm mẫu 1 bài trước</b> cho tôi xem, ổn rồi mới làm tiếp toàn bộ.”</div></div>
+
+  <h3 style="font-size:17px;margin:20px 0 4px">c. Chế độ tự chạy (auto)</h3>
+  <p>Mặc định, mỗi khi AI muốn chạy một lệnh, nó <b>xin phép bạn</b> (bạn bấm cho phép). Khi đã tin tưởng và muốn nó chạy liền mạch không hỏi từng bước, bật chế độ tự chạy.</p>
+  <div class="note action">
+    <div class="lbl">Bật chế độ tự chạy</div>
+    <p>Trong Claude Code, gõ lệnh gạch chéo <span class="mono" style="background:var(--surface-2);padding:2px 7px;border-radius:6px">/permissions</span> để chỉnh, hoặc chọn chế độ <b>tự động chấp nhận</b> (auto-accept). Có thể nói thẳng: <i>“Từ giờ cứ tự chạy các lệnh xử lý video, không cần hỏi tôi mỗi bước.”</i></p>
+    <p style="margin-bottom:0;font-size:14.5px;color:var(--muted)"><b>Lưu ý an toàn:</b> chỉ bật khi bạn đã hiểu việc AI làm. Với thao tác xoá file, vẫn nên để nó hỏi.</p>
+  </div>
+</div></section>
+
+<!-- 4. Quy trình -->
+<section><div class="wrap">
+  <div class="kicker"><span class="n">4</span><h2>Quy trình cắt & dựng video</h2></div>
+  <p class="lead">Đây là mạch việc mình đã làm. Mỗi bước: <span class="hl">bạn nói gì</span> → <span class="hl">AI làm gì</span>.</p>
+
+  <svg class="flow" viewBox="0 0 820 92" role="img" aria-label="Sơ đồ quy trình">
+    <g fill="none" stroke="var(--line)" stroke-width="2">
+      <line x1="118" y1="46" x2="196" y2="46"/><line x1="314" y1="46" x2="392" y2="46"/>
+      <line x1="510" y1="46" x2="588" y2="46"/><line x1="706" y1="46" x2="784" y2="46" stroke-dasharray="4 5"/>
+    </g>
+    <g font-size="13" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <g><rect x="8" y="26" width="110" height="40" rx="10" fill="var(--surface)" stroke="var(--line)"/><text x="63" y="51">🎬 Video</text></g>
+      <g><rect x="196" y="26" width="118" height="40" rx="10" fill="var(--surface)" stroke="var(--line)"/><text x="255" y="51">📝 Chép lời</text></g>
+      <g><rect x="392" y="26" width="118" height="40" rx="10" fill="var(--surface)" stroke="var(--line)"/><text x="451" y="51">✂️ Cắt chương</text></g>
+      <g><rect x="588" y="26" width="118" height="40" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/><text x="647" y="51">🖥️ Dashboard</text></g>
+      <g><rect x="784" y="26" width="30" height="40" rx="10" fill="var(--action-soft)" stroke="var(--action)"/><text x="799" y="51" fill="var(--action)">✓</text></g>
+    </g>
+  </svg>
+
+  <div class="steps">
+    <div class="step"><h3>Chọn thư mục & mở Claude Code</h3>
+      <p>Tạo 1 folder, bỏ video vào đó. Mở Claude Code “tại” folder này (trỏ nó vào đúng chỗ có video).</p>
+      <div class="did"><span class="arrow">→</span><span>AI giờ “nhìn thấy” các file trong folder và làm việc trực tiếp trên chúng.</span></div>
+    </div>
+    <div class="step"><h3>Mô tả việc cần làm</h3>
+      <div class="say"><div class="say-head"><span class="av"></span> Bạn nói với AI
+        <button class="copy" data-copy="Đây là folder video của tôi. Trước tiên hãy liệt kê các file, cho tôi biết định dạng, độ dài. Nếu là WMV thì đổi sang MP4 để Mac mở được.">Sao chép</button></div>
+        <div class="say-body">“Đây là folder video của tôi. Liệt kê các file, cho biết định dạng & độ dài. Nếu là WMV thì <b>đổi sang MP4</b> để Mac mở được.”</div></div>
+      <div class="did"><span class="arrow">→</span><span>AI dùng <b>ffmpeg</b> chuyển định dạng, giữ nguyên chất lượng.</span></div>
+    </div>
+    <div class="step"><h3>Chép lời & tìm mốc cắt</h3>
+      <p>Để cắt đúng chỗ chuyển chủ đề, AI cần “nghe hiểu” video. Cách rẻ nhất: chép lời audio bằng whisper (chạy ngay trên máy, miễn phí).</p>
+      <div class="say"><div class="say-head"><span class="av"></span> Bạn nói với AI
+        <button class="copy" data-copy="Hãy chép lời (transcript) audio của video bằng whisper chạy local, kèm mốc thời gian. Kiểm tra xem có tốn nhiều token không rồi báo tôi trước.">Sao chép</button></div>
+        <div class="say-body">“Chép lời audio bằng <b>whisper chạy local</b>, kèm mốc thời gian. <b>Kiểm tra token</b> rồi báo tôi trước khi làm.”</div></div>
+      <div class="did"><span class="arrow">→</span><span>Có bản chép lời + mốc giây cho từng câu → biết chủ đề bắt đầu ở đâu.</span></div>
+    </div>
+    <div class="step"><h3>Cắt thành chương (không cần cắt file)</h3>
+      <p>Với video dài, thay vì cắt thành nhiều file rời, hãy làm <b>chương (chapter)</b>: một video + danh sách mốc thời gian, bấm là nhảy tới — như chương trên YouTube. Nhẹ và dễ sửa.</p>
+      <div class="did"><span class="arrow">→</span><span>AI tạo bảng chương: tên chủ đề + giây bắt đầu/kết thúc, khớp với transcript.</span></div>
+    </div>
+    <div class="step"><h3>Dựng dashboard xem video</h3>
+      <div class="say"><div class="say-head"><span class="av"></span> Bạn nói với AI
+        <button class="copy" data-copy="Dựng 1 trang web dashboard: bên trái là danh sách chương bấm để nhảy, giữa là trình phát video, dưới video có phụ đề chạy theo, bên phải hiện nội dung bài học. Có nút chuyển EN/VI. Chạy local cho tôi xem.">Sao chép</button></div>
+        <div class="say-body">“Dựng dashboard: trái là <b>danh sách chương</b> bấm để nhảy, giữa là <b>trình phát</b>, dưới có <b>phụ đề chạy theo</b>, có nút <b>EN/VI</b>. Chạy local cho tôi xem.”</div></div>
+      <div class="did"><span class="arrow">→</span><span>AI viết trang web, mở server tại máy bạn (localhost) và bật trình duyệt.</span></div>
+    </div>
+    <div class="step"><h3>Xem, chỉnh, lặp lại</h3>
+      <p>Xem thử rồi yêu cầu chỉnh bằng lời — đây là lúc “biên tập”.</p>
+      <div class="say"><div class="say-head"><span class="av"></span> Bạn nói với AI
+        <button class="copy" data-copy="Chương 2 đổi tên thành 'Giới thiệu ngữ pháp'. Phụ đề đang trễ so với giọng nói, đẩy sớm 0.3 giây. Đổi màu nền tối hơn.">Sao chép</button></div>
+        <div class="say-body">“Chương 2 đổi tên thành ‘…’. <b>Phụ đề đang trễ</b>, đẩy sớm 0.3 giây. Nền tối hơn.”</div></div>
+      <div class="did"><span class="arrow">→</span><span>AI sửa và tải lại. Lặp đến khi ưng ý.</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 5. Bài học -->
+<section><div class="wrap">
+  <div class="kicker"><span class="n">5</span><h2>Bài học & kinh nghiệm</h2></div>
+  <p class="lead">Những điều rút ra khi làm thật — giúp bạn tránh mất thời gian và tiền (token).</p>
+  <div class="lessons">
+    <div class="lesson"><div class="tt"><span class="k"></span>Hỏi “tốn token không?” trước việc nặng</div><p>Cho AI “xem” video bằng hình ảnh rất tốn token. Chép lời audio thì rẻ hơn nhiều. Luôn bảo AI ước lượng & báo trước.</p></div>
+    <div class="lesson"><div class="tt"><span class="k"></span>Ưu tiên công cụ chạy local</div><p>whisper chạy ngay trên máy = miễn phí, không tốn token API. Nhờ AI dùng bản local thay vì gửi dữ liệu lên mạng.</p></div>
+    <div class="lesson"><div class="tt"><span class="k"></span>Duyệt từng bước</div><p>“Làm 1 bài mẫu trước.” Xem ổn rồi mới nhân ra toàn bộ. Tránh AI làm sai hàng loạt.</p></div>
+    <div class="lesson"><div class="tt"><span class="k"></span>Giữ bản gốc, cẩn thận khi xoá</div><p>Luôn để AI làm trên bản sao. Với lệnh xoá/ghi đè, để nó hỏi trước; đừng bật auto cho thao tác nguy hiểm.</p></div>
+    <div class="lesson"><div class="tt"><span class="k"></span>Phụ đề lệch? Dùng “độ trễ”</div><p>Mốc thời gian của máy chép lời thường trễ ~0.3–0.5s. Thêm nút chỉnh “đẩy sớm/muộn” để tự canh cho khít tai.</p></div>
+    <div class="lesson"><div class="tt"><span class="k"></span>Video dài → chương, đừng cắt rời</div><p>Một video + mốc chương gọn hơn hàng chục file. Dễ sửa tên, dễ nhảy, không mất chất lượng.</p></div>
+  </div>
+</div></section>
+
+<!-- 6. Bài thực hành -->
+<section><div class="wrap">
+  <div class="kicker"><span class="n">6</span><h2>Bài thực hành: 1 video YouTube 5 phút → dashboard</h2></div>
+  <p class="lead">Làm theo đúng thứ tự. Toàn bộ chỉ cần <span class="hl">nói chuyện với AI</span>, không gõ lệnh phức tạp.</p>
+
+  <div class="practice">
+    <div class="steps">
+      <div class="step"><h3>Tạo folder thực hành</h3>
+        <p>Tạo folder tên <span class="mono" style="background:var(--surface-2);padding:1px 7px;border-radius:6px">BaiThucHanh</span> trên Desktop. Chưa cần bỏ gì vào.</p></div>
+
+      <div class="step"><h3>Mở Claude Code tại folder đó</h3>
+        <p>Trỏ Claude Code vào folder <span class="mono">BaiThucHanh</span> vừa tạo.</p></div>
+
+      <div class="step"><h3>Nhờ AI tải video YouTube về</h3>
+        <div class="say"><div class="say-head"><span class="av"></span> Bạn nói với AI
+          <button class="copy" data-copy="Hãy tải video YouTube này về folder hiện tại (dùng yt-dlp, chất lượng 720p là đủ): https://www.youtube.com/watch?v=XXXX">Sao chép</button></div>
+          <div class="say-body">“Tải video YouTube này về folder hiện tại (yt-dlp, 720p là đủ): <span class="fill">https://www.youtube.com/watch?v=…</span>”</div></div>
+        <div class="did"><span class="arrow">→</span><span>Dán link video 5 phút bạn thích. AI tải về thành file .mp4.</span></div>
+      </div>
+
+      <div class="step"><h3>Ra lệnh cắt + dựng dashboard</h3>
+        <div class="say"><div class="say-head"><span class="av"></span> Bạn nói với AI
+          <button class="copy" data-copy="Với video vừa tải: (1) chép lời bằng whisper local kèm mốc thời gian; (2) chia thành 4-6 chương theo chủ đề; (3) dựng 1 trang web dashboard chạy local gồm: trình phát video ở giữa, danh sách chương bên trái bấm để nhảy tới, phụ đề chạy theo dưới video, và nút bật/tắt phụ đề. Làm xong mở trình duyệt cho tôi xem.">Sao chép</button></div>
+          <div class="say-body">“Với video vừa tải: <b>(1)</b> chép lời bằng whisper local kèm mốc giờ; <b>(2)</b> chia <b>4–6 chương</b> theo chủ đề; <b>(3)</b> dựng <b>dashboard</b> chạy local: trình phát ở giữa, <b>chương bên trái</b> bấm để nhảy, <b>phụ đề chạy theo</b>, nút bật/tắt phụ đề. Xong mở trình duyệt cho tôi xem.”</div></div>
+        <div class="did"><span class="arrow">→</span><span>AI chép lời → chia chương → viết trang web → mở sẵn trong trình duyệt.</span></div>
+      </div>
+
+      <div class="step"><h3>Xem & tinh chỉnh</h3>
+        <p>Bấm thử các chương, bật phụ đề. Muốn đổi gì cứ nói:</p>
+        <div class="say"><div class="say-head"><span class="av"></span> Bạn nói với AI
+          <button class="copy" data-copy="Thêm nút chỉnh khớp phụ đề (đẩy sớm/muộn 0.1s). Đổi tên chương cho sát nội dung hơn. Thêm nút chuyển sáng/tối.">Sao chép</button></div>
+          <div class="say-body">“Thêm nút <b>chỉnh khớp phụ đề</b> (±0.1s). Đổi tên chương cho sát nội dung. Thêm nút <b>sáng/tối</b>.”</div></div>
+      </div>
+    </div>
+    <div class="note accent" style="margin:18px 0 0">
+      <div class="lbl">Kết quả bạn sẽ có</div>
+      <p style="margin:0">Một trang <b>dashboard xem video</b> chạy trên máy: bấm chương để nhảy đúng đoạn, phụ đề chạy theo lời nói, chỉnh khớp được. Đúng thứ mình đã dựng cho khoá học — giờ bạn tự làm được với bất kỳ video nào.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 7. Glossary -->
+<section><div class="wrap">
+  <div class="kicker"><span class="n">7</span><h2>Giải thích thuật ngữ</h2></div>
+  <div class="gloss">
+    <div class="gr"><div class="term-w">Terminal<span class="en">cửa sổ dòng lệnh</span></div><div class="def">Nơi bạn ra lệnh cho máy bằng chữ. Claude Code sống ở đây (hoặc trong app).</div></div>
+    <div class="gr"><div class="term-w">Prompt<span class="en">lời nhắc</span></div><div class="def">Câu bạn gõ cho AI. Viết như giao việc: có gì → muốn gì → kết quả ra sao.</div></div>
+    <div class="gr"><div class="term-w">Folder<span class="en">thư mục</span></div><div class="def">Nơi chứa file. Bạn “mở Claude Code tại folder” để nó làm việc đúng chỗ.</div></div>
+    <div class="gr"><div class="term-w">Token</div><div class="def">“Đơn vị chi phí” khi AI đọc/viết. Việc nặng (xem hình ảnh nhiều) tốn nhiều token — nên hỏi trước.</div></div>
+    <div class="gr"><div class="term-w">ffmpeg</div><div class="def">Phần mềm xử lý video/âm thanh: đổi định dạng, cắt, ghép, tách tiếng.</div></div>
+    <div class="gr"><div class="term-w">whisper</div><div class="def">Phần mềm chép lời (nghe audio → ra chữ) kèm mốc thời gian. Chạy được ngay trên máy.</div></div>
+    <div class="gr"><div class="term-w">Transcript<span class="en">bản chép lời</span></div><div class="def">Toàn bộ lời nói trong video, viết ra chữ. Dùng để làm phụ đề và tìm chỗ cắt.</div></div>
+    <div class="gr"><div class="term-w">Chapter<span class="en">chương / mốc</span></div><div class="def">Một đoạn chủ đề trong video, có giờ bắt đầu. Bấm để nhảy tới, như chương YouTube.</div></div>
+    <div class="gr"><div class="term-w">Subtitle / Caption<span class="en">phụ đề</span></div><div class="def">Dòng chữ chạy theo lời nói dưới video.</div></div>
+    <div class="gr"><div class="term-w">Localhost / Server</div><div class="def">Máy bạn tự “phục vụ” trang web cho chính nó, để xem thử mà không cần internet.</div></div>
+    <div class="gr"><div class="term-w">MP4 / WMV</div><div class="def">Định dạng video. WMV là kiểu Windows; MP4 mở được ở mọi nơi (nên đổi WMV→MP4).</div></div>
+    <div class="gr"><div class="term-w">Chế độ auto<span class="en">tự chạy</span></div><div class="def">Cho phép AI chạy lệnh liền mạch không hỏi từng bước. Tiện nhưng chỉ bật khi đã tin tưởng.</div></div>
+  </div>
+</div></section>
+
+<div class="wrap"><hr class="divider" style="margin:20px 0 0"></div>
+
+<!-- prompt library -->
+<section><div class="wrap">
+  <div class="kicker"><span class="n">✦</span><h2>Bộ prompt mẫu (copy là dùng)</h2></div>
+  <div class="say"><div class="say-head"><span class="av"></span> Cài môi trường
+      <button class="copy" data-copy="Máy tôi là [macOS/Windows]. Kiểm tra và cài giúp tôi: ffmpeg, whisper, yt-dlp, Python nếu thiếu. Xong báo tôi mỗi cái làm gì.">Sao chép</button></div>
+    <div class="say-body">“Máy tôi là [macOS/Windows]. Kiểm tra & cài giúp tôi: ffmpeg, whisper, yt-dlp, Python. Xong báo tôi mỗi cái làm gì.”</div></div>
+  <div class="say"><div class="say-head"><span class="av"></span> Đổi định dạng
+      <button class="copy" data-copy="Đổi tất cả video WMV trong folder này sang MP4 (giữ chất lượng), lưu vào thư mục con MP4.">Sao chép</button></div>
+    <div class="say-body">“Đổi tất cả video WMV trong folder này sang MP4 (giữ chất lượng), lưu vào thư mục con MP4.”</div></div>
+  <div class="say"><div class="say-head"><span class="av"></span> Chép lời + chia chương
+      <button class="copy" data-copy="Chép lời video bằng whisper local kèm mốc thời gian, rồi chia thành các chương theo chủ đề. Cắt sát chỗ chuyển chủ đề. Báo token trước khi chạy.">Sao chép</button></div>
+    <div class="say-body">“Chép lời bằng whisper local kèm mốc giờ, chia chương theo chủ đề, cắt sát chỗ chuyển. Báo token trước khi chạy.”</div></div>
+  <div class="say"><div class="say-head"><span class="av"></span> Dựng dashboard
+      <button class="copy" data-copy="Dựng 1 trang web dashboard chạy local: trình phát video ở giữa, danh sách chương bên trái bấm để nhảy, phụ đề chạy theo dưới video, nút bật/tắt phụ đề và nút chỉnh khớp ±0.1s. Mở trình duyệt cho tôi xem.">Sao chép</button></div>
+    <div class="say-body">“Dựng dashboard chạy local: trình phát ở giữa, chương bên trái bấm để nhảy, phụ đề chạy theo, nút bật/tắt & chỉnh khớp ±0.1s. Mở trình duyệt cho tôi xem.”</div></div>
+  <div class="say"><div class="say-head"><span class="av"></span> Đóng gói thành app
+      <button class="copy" data-copy="Đóng gói dashboard này thành phần mềm chạy local cho Windows/Mac/Linux: tải về, mở lên là tự bật trang trên trình duyệt, kèm sẵn video (offline).">Sao chép</button></div>
+    <div class="say-body">“Đóng gói dashboard thành phần mềm chạy local cho Win/Mac/Linux: mở lên tự bật trình duyệt, kèm sẵn video, offline.”</div></div>
+</div></section>
+
+</main>
+
+<footer><div class="wrap">
+  <span>Tài liệu hướng dẫn nội bộ · Dùng Claude Code cho video</span>
+  <span>Bí quyết: mô tả rõ · duyệt từng bước · hỏi token trước việc nặng.</span>
+</div></footer>
+
+<script>
+// theme toggle
+(function(){
+  const root=document.documentElement, btn=document.getElementById('themeBtn');
+  const saved=localStorage.getItem('cc_guide_theme');
+  if(saved) root.setAttribute('data-theme',saved);
+  btn.addEventListener('click',()=>{
+    const cur=root.getAttribute('data-theme')|| (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    const next=cur==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next); localStorage.setItem('cc_guide_theme',next);
+  });
+})();
+// copy buttons
+document.querySelectorAll('.copy').forEach(b=>{
+  b.addEventListener('click',async()=>{
+    try{ await navigator.clipboard.writeText(b.dataset.copy);
+      const t=b.textContent; b.textContent='✓ Đã chép'; b.classList.add('done');
+      setTimeout(()=>{b.textContent=t;b.classList.remove('done');},1400);
+    }catch(e){ b.textContent='Bấm giữ để chép'; }
+  });
+});
+</script>
+</body>
+</html>

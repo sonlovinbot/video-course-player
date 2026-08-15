@@ -1,0 +1,17 @@
+{
+  "name": "Pronunciation Workshop",
+  "short_name": "Pronunciation",
+  "description": "Học phát âm tiếng Anh Mỹ — video bài học + tài liệu PDF song ngữ.",
+  "lang": "vi",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1422",
+  "theme_color": "#0f1422",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
